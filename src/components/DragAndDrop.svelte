@@ -4,7 +4,7 @@ export let overlay = false;
 export let isDragging = false;
 
 function notSupportedMessage() {
-	alert("This browser does not support the File System Access API. Please use a chromium browser such as Google Chrome, Microsoft Edge, or Opera.");
+	alert("This browser does not support the File System Access API. Please use a Chromium browser such as Google Chrome, Microsoft Edge, or Opera.");
 }
 
 async function dropHandler(ev: DragEvent) {
