@@ -35,7 +35,7 @@ function onDrag() {
 }
 
 async function onClick() {
-	if (!showDirectoryPicker) {
+	if (!("showDirectoryPicker" in window)) {
 		notSupportedMessage();
 		return;
 	}
