@@ -2,7 +2,7 @@
 
 <p>
 	This tool is for batch resizing and reformating images within a folder-hierarchy.
-	It is ideal for generating responsive images for websites.
+	It is ideal for generating responsive images for websites where the original folder-structure has to be respected.
 </p>
 
 <p>
