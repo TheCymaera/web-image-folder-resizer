@@ -152,6 +152,7 @@ async function processFiles() {
 
 		const ctx = canvas.getContext("2d")!;
 		ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+		image.close();
 
 		const oldExtension = file.name.split(".").pop()!.toLowerCase();
 		const newExtension = extension === "AUTO" ? oldExtension : extension;
