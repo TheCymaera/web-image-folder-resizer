@@ -16,7 +16,7 @@ let width = "512";
 let height = "auto";
 let quality = 1;
 
-let inputs: string[][] = [];
+let inputs: {path: string[], handle: FileSystemHandle}[] = [];
 let outputs = new Map<string, string>();
 
 let isDragging: boolean;
@@ -27,29 +27,35 @@ let progressText = "";
 let imageListElement: HTMLElement;
 $: {
 	inputs, outputs;
-	if (imageListElement) requestAnimationFrame(()=>{
-		imageListElement.lastElementChild?.scrollIntoView({ block: "end" })
-	});
+	requestAnimationFrame(scrollToBottom);
 }
 
-function onDrop(folder: FileSystemDirectoryHandle) {
+function scrollToBottom() {
+	if (!imageListElement) return;
+	imageListElement.scrollTop = imageListElement.scrollHeight;
+}
+
+async function onDrop(folder: FileSystemDirectoryHandle) {
 	inputFolder = folder;
-	updateFileList();
+	outputs = new Map<string, string>();
+	updateInputFiles();
 }
 
-async function updateFileList() {
-	outputs = new Map<string, string>();
+async function updateInputFiles() {
+	progressText = "Searching for images...";
+
 	inputs = [];
 
 	if (!inputFolder) return;
-
 	for await (const [path, handle] of fsaUtil.entries(inputFolder)) {
 		if (handle.kind !== "file") continue;
 		
 		if (!isImageFile(path)) continue;
-		inputs.push(path);
+		inputs.push({path, handle});
 		inputs = inputs;
 	}
+
+	progressText = "Found " + inputs.length + " images!";
 }
 
 function isImageFile(path: string[]) {
@@ -121,9 +127,6 @@ export function getDimensions(image: ImageBitmap, width?: number, height?: numbe
 }
 
 async function processFiles() {
-	outputs = new Map<string, string>();
-	inputs = [];
-
 	if (!inputFolder) {
 		progressText = "No input folder selected.";
 		return;
@@ -131,14 +134,10 @@ async function processFiles() {
 
 	progressText = "Resizing...";
 
-	for await (const [path, handle] of fsaUtil.entries(inputFolder)) {
+	outputs = new Map<string, string>();
+	for (const {path, handle} of inputs) {
 		if (handle.kind !== "file") continue;
 		
-		if (!isImageFile(path)) continue;
-
-		inputs.push(path);
-		inputs = inputs;
-
 		if (!filter(path, inputIncludeRegex.value, inputExcludeRegex?.value)) continue;
 
 		const file = await (handle as FileSystemFileHandle).getFile();
@@ -278,7 +277,7 @@ let dialogOpen = false;
 				>
 					<helion-card style="padding: 1em; overflow: auto;" bind:this={imageListElement}>
 						<h3>Images:</h3>
-						{#each inputs as path}
+						{#each inputs as {path}}
 							<code class:Excluded={!filter(path, inputIncludeRegex.value, inputExcludeRegex?.value)}>{path.join("/")}</code>
 							
 							{#if outputs.has(path.join("/"))}
