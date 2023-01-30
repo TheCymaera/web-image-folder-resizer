@@ -264,7 +264,7 @@ let dialogOpen = false;
 				<helion-center style="text-align: center; padding: 1em;">
 					<div>
 						Drag and drop a folder. <br />
-						<small>All images are processed locally in your browser. We never receive your files.</small>
+						<small>All images are processed locally in your browser. I never receive your files.</small>
 					</div>
 				</helion-center>
 			</DragAndDrop>
