@@ -184,12 +184,12 @@ let dialogOpen = false;
 	<helion-app-bar slot="header">
 		<helion-app-bar-title>Image Folder Resizer</helion-app-bar-title>
 		<helion-app-bar-right>
-			<button class="helion-app-bar-icon-button" title="Info" on:click={()=>dialogOpen = true}>
-				<Icon url="{infoIcon}" />
-			</button>
 			<a class="helion-app-bar-icon-button" href="/" title="Home">
 				<Icon url="{homeIcon}" />
 			</a>
+			<button class="helion-app-bar-icon-button" title="Info" on:click={()=>dialogOpen = true}>
+				<Icon url="{infoIcon}" />
+			</button>
 		</helion-app-bar-right>
 	</helion-app-bar>
 	<div slot="body">
