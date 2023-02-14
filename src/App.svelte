@@ -10,7 +10,7 @@ let inputFolder: FileSystemDirectoryHandle|undefined;
 let inputIncludePattern = ".*";
 let inputExcludePattern = "resized";
 
-let outputPattern = "{path}/{name}-resized-{width}.{ext}";
+let outputPattern = "{folder}/{name}-resized-{width}.{ext}";
 let extension = "AUTO";
 let width = "512";
 let height = "auto";
@@ -67,7 +67,7 @@ function isImageFile(path: string[]) {
 function getOutputPath(path: string[], extension: string, width: number, height: number) {
 	const name = path[path.length - 1]!;
 	const newPathString = outputPattern
-		.replace("{path}", path.slice(0, -1).join("/"))
+		.replace("{folder}", path.slice(0, -1).join("/"))
 		.replace("{name}", name.split(".").slice(0, -1).join("."))
 		.replace("{width}", width.toString())
 		.replace("{height}", height.toString())
@@ -180,7 +180,7 @@ async function processFiles() {
 let dialogOpen = false;
 </script>
 
-<helion-standard-view>
+<helion-standard-view class="helion-fill-parent">
 	<helion-app-bar slot="header">
 		<helion-app-bar-title>Image Folder Resizer</helion-app-bar-title>
 		<helion-app-bar-right>
@@ -298,6 +298,7 @@ let dialogOpen = false;
 
 
 <helion-panel 
+	class="helion-fill-parent"
 	style="
 		opacity: {dialogOpen ? 1 : 0};
 		pointer-events: {dialogOpen ? "all" : "none"};
