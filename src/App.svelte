@@ -1,8 +1,7 @@
 <script lang="ts">
 import * as fsaUtil from "./fsaUtilities.js";
 import DragAndDrop from "./components/DragAndDrop.svelte";
-import Icon from "./components/Icon.svelte";
-import { closeIcon, homeIcon, infoIcon, arrowRightIcon } from "./icons/icons.js";
+import { fa5_solid_arrowRight, fa5_solid_home, fa5_solid_info, fa5_solid_times } from "fontawesome-svgs"
 import Slider from "./components/Slider.svelte";
 import AppInfo from "./AppInfo.svelte";
 
@@ -185,10 +184,10 @@ let dialogOpen = false;
 		<helion-app-bar-title>Image Folder Resizer</helion-app-bar-title>
 		<helion-app-bar-right>
 			<a class="helion-app-bar-icon-button" href="/" title="Home">
-				<Icon url="{homeIcon}" />
+				{@html fa5_solid_home}
 			</a>
 			<button class="helion-app-bar-icon-button" title="Info" on:click={()=>dialogOpen = true}>
-				<Icon url="{infoIcon}" />
+				{@html fa5_solid_info}
 			</button>
 		</helion-app-bar-right>
 	</helion-app-bar>
@@ -281,7 +280,7 @@ let dialogOpen = false;
 							<code class:Excluded={!filter(path, inputIncludeRegex.value, inputExcludeRegex?.value)}>{path.join("/")}</code>
 							
 							{#if outputs.has(path.join("/"))}
-								<Icon url="{arrowRightIcon}" />
+								{@html fa5_solid_arrowRight}
 								<code>{outputs.get(path.join("/"))}</code>
 							{/if}
 							<br />
@@ -319,7 +318,7 @@ let dialogOpen = false;
 		title="Close"
 		on:click={()=>dialogOpen = false}
 	>
-		<Icon url="{closeIcon}" />
+		{@html fa5_solid_times}
 	</button>
 </helion-panel>
 <style>

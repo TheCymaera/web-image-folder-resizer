@@ -5,7 +5,7 @@
 		"module": "ESNext",
 		"target": "ESNext",
 
-		"moduleResolution": "node16",
+		"moduleResolution": "nodenext",
 		"allowSyntheticDefaultImports": true,
 
     "importsNotUsedAsValues": "error",
