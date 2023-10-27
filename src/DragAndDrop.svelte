@@ -1,5 +1,5 @@
 <script lang="ts">
-export let onDrop: (file: FileSystemDirectoryHandle) => void;
+export let onDrop: (file: FileSystemDirectoryHandle[]) => void;
 export let overlay = false;
 export let isDragging = false;
 
@@ -9,6 +9,8 @@ function notSupportedMessage() {
 
 async function dropHandler(ev: DragEvent) {
   if (ev.dataTransfer?.items) {
+
+		const out: FileSystemDirectoryHandle[] = [];
 		for (const item of ev.dataTransfer.items) {
 			if (!("getAsFileSystemHandle" in item)) {
 				notSupportedMessage();
@@ -18,9 +20,11 @@ async function dropHandler(ev: DragEvent) {
 			const file = await item.getAsFileSystemHandle();
 			if (!file) continue;
 			if (file.kind === "directory") {
-				onDrop(file as FileSystemDirectoryHandle);
+				out.push(file as FileSystemDirectoryHandle);
 			}
 		}
+
+		onDrop(out);
   }
 }
 
@@ -41,7 +45,7 @@ async function onClick() {
 	}
 	
 	const folder = await showDirectoryPicker({ mode: "readwrite" });
-	onDrop(folder);
+	onDrop([folder]);
 }
 
 </script>
@@ -49,45 +53,18 @@ async function onClick() {
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
-	class:isDragging
-	class:isOverlay={overlay}
+	class="
+		grid overflow-hidden p-4 transition-opacity duration-100 ease-in-out
+		{overlay ? "opacity-0 bg-surface text-onSurface pointer-events-none" : ""}
+		{overlay && isDragging ? "!opacity-95 !pointer-events-auto" : ""}
+	"
 
 	on:drop|preventDefault={dropHandler}
 	on:click={onClick}
 >
+	<div class="
+		absolute inset-4 border-2 border-dashed rounded-md grid place-items-center transition-colors duration-100 ease-in-out
+		{isDragging ? "border-primary-500" : "border-[currentColor]"}
+	" />
 	<slot></slot>
 </div>
-
-<style>
-div {
-	display: grid;
-	overflow: hidden;
-	padding: 1em;
-	transition: opacity .1s ease;
-}
-
-div::after {
-	content: "";
-	position: absolute;
-	inset: 1em;
-
-	border: .2em dashed currentColor;
-	border-radius: .5em;
-	transition: border-color .1s ease;
-}
-
-.isDragging::after {
-	border-color: var(--helion-color-accent);
-}
-
-.isOverlay {
-	opacity: 0;
-	background-color: var(--helion-color-backdrop-background);
-	pointer-events: none;
-}
-
-.isOverlay.isDragging  {
-	opacity: .95;
-	pointer-events: all;
-}
-</style>

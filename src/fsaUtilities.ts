@@ -1,12 +1,16 @@
 export async function *entries(folder: FileSystemDirectoryHandle): AsyncGenerator<[string[], FileSystemHandle]> {
-	for await (const [name, entry] of folder) {
-		if (entry.kind === 'directory') {
-			for await (const [path, subentry] of entries(entry)) {
-				yield [[name, ...path], subentry];
+	try {
+		for await (const [name, entry] of folder.entries()) {
+			if (entry.kind === 'directory') {
+				for await (const [path, subentry] of entries(entry)) {
+					yield [[name, ...path], subentry];
+				}
+			} else {
+				yield [[name], entry];
 			}
-		} else {
-			yield [[name], entry];
 		}
+	} catch (e) {
+		
 	}
 }
 

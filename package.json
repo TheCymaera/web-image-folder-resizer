@@ -8,12 +8,11 @@
 	},
 	"devDependencies": {
 		"@sveltejs/vite-plugin-svelte": "^2.0.2",
-		"svelte": "^3.55.1",
-		"vite": "^4.1.2"
-	},
-	"dependencies": {
-		"@types/wicg-file-system-access": "^2020.9.5",
+		"@types/wicg-file-system-access": "^2020.9.8",
+		"autoprefixer": "^10.4.16",
 		"fontawesome-svgs": "^1.0.2",
-		"helion": "link:/Users/morgannew/Desktop/code/web/misc/npm-packages/helion-v2"
+		"svelte": "^3.55.1",
+		"tailwindcss": "^3.3.5",
+		"vite": "^4.1.2"
 	}
 }

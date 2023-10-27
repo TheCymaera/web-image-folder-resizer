@@ -1,11 +1,16 @@
 <script lang="ts">
 import * as fsaUtil from "./fsaUtilities.js";
-import DragAndDrop from "./components/DragAndDrop.svelte";
+import DragAndDrop from "./DragAndDrop.svelte";
 import { fa5_solid_arrowRight, fa5_solid_home, fa5_solid_info, fa5_solid_times } from "fontawesome-svgs"
-import Slider from "./components/Slider.svelte";
+import Slider from "./Slider.svelte";
+import IconButton from "./helion/IconButton.svelte";
+import FilledButton from "./helion/FilledButton.svelte";
+import OutlinedTextField from "./helion/OutlinedTextField.svelte";
+import OutlinedSelectField from "./helion/OutlinedSelectField.svelte";
+import CircleButton from "./helion/CircleButton.svelte";
 import AppInfo from "./AppInfo.svelte";
 
-let inputFolder: FileSystemDirectoryHandle|undefined;
+let inputFolders: FileSystemDirectoryHandle[]|undefined;
 let inputIncludePattern = ".*";
 let inputExcludePattern = "resized";
 
@@ -15,7 +20,7 @@ let width = "512";
 let height = "auto";
 let quality = 1;
 
-let inputs: {path: string[], handle: FileSystemHandle}[] = [];
+let inputs: {path: string[], handle: FileSystemHandle, root: FileSystemDirectoryHandle}[] = [];
 let outputs = new Map<string, string>();
 
 let isDragging: boolean;
@@ -34,8 +39,8 @@ function scrollToBottom() {
 	imageListElement.scrollTop = imageListElement.scrollHeight;
 }
 
-async function onDrop(folder: FileSystemDirectoryHandle) {
-	inputFolder = folder;
+async function onDrop(folder: FileSystemDirectoryHandle[]) {
+	inputFolders = folder;
 	outputs = new Map<string, string>();
 	updateInputFiles();
 }
@@ -45,13 +50,16 @@ async function updateInputFiles() {
 
 	inputs = [];
 
-	if (!inputFolder) return;
-	for await (const [path, handle] of fsaUtil.entries(inputFolder)) {
-		if (handle.kind !== "file") continue;
-		
-		if (!isImageFile(path)) continue;
-		inputs.push({path, handle});
-		inputs = inputs;
+	if (!inputFolders) return;
+
+	for (const root of inputFolders) {
+		for await (const [path, handle] of fsaUtil.entries(root)) {
+			if (handle.kind !== "file") continue;
+			
+			if (!isImageFile(path)) continue;
+			inputs.push({path, handle, root});
+			inputs = inputs;
+		}
 	}
 
 	progressText = "Found " + inputs.length + " images!";
@@ -126,7 +134,7 @@ export function getDimensions(image: ImageBitmap, width?: number, height?: numbe
 }
 
 async function processFiles() {
-	if (!inputFolder) {
+	if (!inputFolders) {
 		progressText = "No input folder selected.";
 		return;
 	}
@@ -134,7 +142,7 @@ async function processFiles() {
 	progressText = "Resizing...";
 
 	outputs = new Map<string, string>();
-	for (const {path, handle} of inputs) {
+	for (const {path, handle, root} of inputs) {
 		if (handle.kind !== "file") continue;
 		
 		if (!filter(path, inputIncludeRegex.value, inputExcludeRegex?.value)) continue;
@@ -163,7 +171,7 @@ async function processFiles() {
 
 		const newPath = getOutputPath(path, newExtension, width, height);
 
-		const newHandle = await fsaUtil.getFileHandle(inputFolder, newPath, { create: true }, { create: true });
+		const newHandle = await fsaUtil.getFileHandle(root, newPath, { create: true }, { create: true });
 		const writable = await newHandle.createWritable();
 		await writable.write(blob2);
 		await writable.close();
@@ -179,93 +187,74 @@ async function processFiles() {
 let dialogOpen = false;
 </script>
 
-<helion-standard-view class="helion-fill-parent">
-	<helion-app-bar slot="header">
-		<helion-app-bar-title>Image Folder Resizer</helion-app-bar-title>
-		<helion-app-bar-right>
-			<a class="helion-app-bar-icon-button" href="/" title="Home">
-				{@html fa5_solid_home}
-			</a>
-			<button class="helion-app-bar-icon-button" title="Info" on:click={()=>dialogOpen = true}>
-				{@html fa5_solid_info}
-			</button>
-		</helion-app-bar-right>
-	</helion-app-bar>
-	<div slot="body">
-		<helion-panel>
-			<h3>Input:</h3>
-			<label>
-				<div>Include <small>(Regex)</small></div>
-				<input type="text" class="helion-outlined-text-field" class:helion-has-error={!!inputIncludeRegex.error} bind:value={inputIncludePattern} />
+<div class="grid grid-rows-[min-content,1fr] absolute inset-0 z-0">
+	<header class="bg-surfaceContainer text-onSurfaceContainer flex items-center shadow z-10 overflow-hidden">
+		<h1 class="flex-1 px-3 font-bold">Image Folder Resizer</h1>
+		<IconButton href="/" label="Home">
+			{@html fa5_solid_home}
+		</IconButton>
+		<IconButton label="Info" onPress={()=>dialogOpen = true}>
+			{@html fa5_solid_info}
+		</IconButton>
+	</header>
+	<main class="grid grid-cols-[400px,1fr] z-0">
+		<side class="bg-surfaceContainer text-onSurfaceContainer p-3">
+			<h2 class="font-bold text-xl">Input:</h2>
 
-				<small>{inputIncludeRegex.error ?? ""}</small>
-			</label>
+			<OutlinedTextField label="Include" hint="Regex" bind:value={inputIncludePattern} error={inputIncludeRegex?.error} />
 
-			<label>
-				<div>Exclude <small>(Regex)</small></div>
-				<input type="text" class="helion-outlined-text-field" class:helion-has-error={inputExcludeRegex && !!inputExcludeRegex.error} bind:value={inputExcludePattern} placeholder="None" />
+			<OutlinedTextField label="Exclude" hint="Regex" bind:value={inputExcludePattern} error={inputExcludeRegex?.error} />
 
-				<small>{inputExcludeRegex?.error ?? ""}</small>
-			</label>
+			<br>
 
-			<hr>
+			<h2 class="font-bold text-xl">Output:</h2>
 
-			<h3>Output:</h3>
-			<label>
-				<div>File Path</div>
-				<input type="text" class="helion-outlined-text-field" bind:value={outputPattern} />
-			</label>
+			<OutlinedTextField label="File Path" bind:value={outputPattern} /> <br />
 
-			<label>
-				<div>Width</div>
-				<input type="text" class="helion-outlined-text-field" bind:value={width} class:helion-has-error={!!widthParsed.error} />
-				<small>{widthParsed.error ?? ""}</small>
-			</label>
+			<OutlinedTextField label="Width" bind:value={width} error={widthParsed.error} /> <br />
 
-			<label>
-				<div>Height</div>
-				<input type="text" class="helion-outlined-text-field" bind:value={height} class:helion-has-error={!!heightParsed.error} />
-				<small>{heightParsed.error ?? ""}</small>
-			</label>
+			<OutlinedTextField label="Height" bind:value={height} error={heightParsed.error} /> <br />
 
-			<label>
-				<div>Format</div>
-				<select class="helion-outlined-text-field" bind:value={extension}>
-					<option value="AUTO">Use Original</option>
-					<option value="png">PNG</option>
-					<option value="jpg">JPG</option>
-					<option value="webp">WebP</option>
-				</select>
-			</label>
+			<OutlinedSelectField 
+				label="Format"
+				bind:value={extension}
+				options={[
+					{ value: "AUTO", label: "Use Original" },
+					{ value: "png", label: "PNG" },
+					{ value: "jpg", label: "JPG" },
+					{ value: "webp", label: "WebP" },
+				]}
+			/>
+			<br>
 
 			<label style:display={extension === "png" ? "none" : ""}>
 				<div>Quality</div>
 				<Slider bind:value={quality} min={0} max={1} step={0.01} />
 			</label>
 
+			<br>
 			<hr>
 			<br>
 
-			<div>
-				<button class="helion-filled-button" on:click={processFiles}>Resize</button>
-			</div>
+			<FilledButton onPress={processFiles}>Resize</FilledButton>
 
+			<br>
 			<br>
 
 			<div>{progressText}</div>
 
 			<div style="height: 300px;"></div>
-		</helion-panel>
+		</side>
 
 
-		<helion-stack>
+		<div class="relative [&>*]:!inset-0 [&>*]:!absolute">
 			<DragAndDrop onDrop={onDrop} bind:isDragging>
-				<helion-center style="text-align: center; padding: 1em;">
+				<div class="text-center grid place-items-center p-4">
 					<div>
 						Drag and drop a folder. <br />
 						<small>All images are processed locally in your browser. I never receive your files.</small>
 					</div>
-				</helion-center>
+				</div>
 			</DragAndDrop>
 
 			{#if inputs.length}
@@ -274,8 +263,8 @@ let dialogOpen = false;
 					style:transition={isDragging ? "opacity 0.2s" : ""}
 					style:pointer-events={isDragging ? "none" : "auto"}
 				>
-					<helion-card style="padding: 1em; overflow: auto;" bind:this={imageListElement}>
-						<h3>Images:</h3>
+					<div class="bg-surfaceContainer text-onSurfaceContainer p-4 overflow-auto" bind:this={imageListElement}>
+						<h2 class="font-bold text-xl">Images:</h2>
 						{#each inputs as {path}}
 							<code class:Excluded={!filter(path, inputIncludeRegex.value, inputExcludeRegex?.value)}>{path.join("/")}</code>
 							
@@ -287,78 +276,32 @@ let dialogOpen = false;
 						{/each}
 
 						<div></div>
-					</helion-card>
+					</div>
 				</div>
 			{/if}
-		</helion-stack>
-	</div>
-</helion-standard-view>
+		</div>
+	</main>
+</div>
 
 
 
-<helion-panel 
-	class="helion-fill-parent"
+<div class="absolute inset-0 z-20 bg-surface text-onSurface"
 	style="
 		opacity: {dialogOpen ? 1 : 0};
 		pointer-events: {dialogOpen ? "all" : "none"};
 		transition: opacity .1s;
 	">
-	<div style="height: 100%; overflow: auto;">
-		<div style="
-			margin: auto; 
-			max-width: 800px; 
-			padding: .5em 1em;
-		">
+	<div class="h-full overflow-auto">
+		<div 
+			class="m-auto max-w-[800px] py-4 px-2">
 			<AppInfo />
 		</div>
 	</div>
-	<button 
-		class="helion-circle-button" 
-		style="position: absolute; right: 0.5em; top: 0.5em;"
-		title="Close"
-		on:click={()=>dialogOpen = false}
+	<CircleButton 
+		class="absolute right-2 top-2"
+		label="Close"
+		onPress={()=>dialogOpen = false}
 	>
 		{@html fa5_solid_times}
-	</button>
-</helion-panel>
-<style>
-	[slot=body] {
-		display: grid;
-		grid-template-columns: 350px 1fr;
-	}
-
-	helion-panel {
-		padding: 1em;
-		overflow: auto;
-	}
-
-	label {
-		display: block;
-		margin-bottom: 1em;
-	}
-
-	code {
-		transition: opacity .1s;
-	}
-
-	.Excluded {
-		opacity: 0.3;
-		text-decoration: line-through;
-	}
-
-
-	@media (max-width: 700px) {
-		[slot=body] {
-			grid-template-columns: 1fr;
-			grid-template-rows: 1fr 1fr;
-		}
-
-		[slot=body] > *:nth-child(2) {
-			order: 1;
-		}
-
-		[slot=body] > *:nth-child(1) {
-			order: 2;
-		}
-	}
-</style>
+	</CircleButton>
+</div>
