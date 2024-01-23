@@ -197,8 +197,8 @@ let dialogOpen = false;
 			{@html fa5_solid_info}
 		</IconButton>
 	</header>
-	<main class="grid grid-cols-[400px,1fr] z-0">
-		<side class="bg-surfaceContainer text-onSurfaceContainer p-3">
+	<main class="grid grid-cols-[400px,1fr] z-0 overflow-hidden">
+		<side class="bg-surfaceContainer text-onSurfaceContainer p-3 overflow-auto">
 			<h2 class="font-bold text-xl">Input:</h2>
 
 			<OutlinedTextField label="Include" hint="Regex" bind:value={inputIncludePattern} error={inputIncludeRegex?.error} />
